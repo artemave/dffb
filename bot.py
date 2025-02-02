@@ -68,7 +68,7 @@ async def send_daily_fact():
     """Fetch a unique fact and send it to the Telegram channel."""
     fact = fetch_unique_fact()
     if fact:
-        await bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=f"🤖 Daily Fun Fact:\n{fact}")
+        await bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=fact)
     else:
         await bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text="Couldn't fetch a new fun fact today.")
 
@@ -76,7 +76,7 @@ async def send_daily_fact():
 async def fact_command(update: Update, context):
     """Respond to /fact command with a unique fun fact."""
     fact = fetch_unique_fact()
-    await update.message.reply_text(f"🤖 Fun Fact:\n{fact}")
+    await update.message.reply_text(fact)
 
 # Handle inline queries (e.g., "@MyBot fact")
 async def inline_query(update, context):
@@ -90,7 +90,7 @@ async def inline_query(update, context):
             title="Fun Fact",
             input_message_content=InputTextMessageContent(fact)
         )
-        await update.inline_query.answer([result])
+        await update.inline_query.answer([result], cache_time=0)
 
 logging.basicConfig(level=logging.INFO)
 
