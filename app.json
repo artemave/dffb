@@ -1,0 +1,13 @@
+{
+  "name": "dffb",
+  "scripts": {
+    "dokku": {
+      "postdeploy": "echo 'Deployment finished!'"
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1
+    }
+  }
+}
