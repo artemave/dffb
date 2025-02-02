@@ -60,6 +60,8 @@ def fetch_unique_fact():
         if fact not in previous_facts:
             save_fact(fact)
             return fact
+        else:
+            return fetch_unique_fact()
     except Exception as e:
         logging.error(f"OpenAI API error: {e}")
         return None
@@ -67,10 +69,9 @@ def fetch_unique_fact():
 async def send_daily_fact():
     """Fetch a unique fact and send it to the Telegram channel."""
     fact = fetch_unique_fact()
-    if fact:
-        await bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=fact)
-    else:
-        await bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text="Couldn't fetch a new fun fact today.")
+    channel_ids = TELEGRAM_CHANNEL_ID.split(",")
+    for channel_id in channel_ids:
+        await bot.send_message(chat_id=channel_id, text=fact)
 
 # Command Handler: /fact
 async def fact_command(update: Update, context):
