@@ -1,11 +1,12 @@
 import os
+import uuid
 import asyncio
 import json
 import logging
 import openai
-# from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.schedulers.blocking import BlockingScheduler
-from telegram import Bot
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from telegram import Update, Bot, InlineQueryResultArticle, InputTextMessageContent
+from telegram.ext import Application, CommandHandler, InlineQueryHandler
 
 # Load environment variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -20,10 +21,6 @@ FACTS_FILE = "facts.json"
 if not os.path.exists(FACTS_FILE):
     with open(FACTS_FILE, "w") as f:
         json.dump({"facts": []}, f)
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
 def get_previous_facts():
     """Load previous facts from JSON file."""
@@ -75,10 +72,37 @@ async def send_daily_fact():
     else:
         await bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text="Couldn't fetch a new fun fact today.")
 
-# asyncio.run(send_daily_fact())
+# Command Handler: /fact
+async def fact_command(update: Update, context):
+    """Respond to /fact command with a unique fun fact."""
+    fact = fetch_unique_fact()
+    await update.message.reply_text(f"🤖 Fun Fact:\n{fact}")
 
-# Scheduler for daily posting
-# scheduler = BackgroundScheduler()
-scheduler = BlockingScheduler()
-scheduler.add_job(send_daily_fact, "cron", hour=1, minute=0)  # Adjust time as needed
-scheduler.start()
+# Handle inline queries (e.g., "@MyBot fact")
+async def inline_query(update, context):
+    """Respond to inline queries with a fun fact."""
+    query = update.inline_query.query.strip().lower()
+
+    if "fact" in query:  # Only respond if query contains "fact"
+        fact = fetch_unique_fact()  # Fetch a new fact
+        result = InlineQueryResultArticle(
+            id=str(uuid.uuid4()),  # Unique ID for each response
+            title="Fun Fact",
+            input_message_content=InputTextMessageContent(fact)
+        )
+        await update.inline_query.answer([result])
+
+logging.basicConfig(level=logging.INFO)
+
+bot = Bot(token=TELEGRAM_BOT_TOKEN)
+app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+app.add_handler(CommandHandler("fact", fact_command))
+# Add InlineQueryHandler to bot
+app.add_handler(InlineQueryHandler(inline_query))
+
+scheduler = AsyncIOScheduler()
+scheduler.add_job(send_daily_fact, "cron", hour=1, minute=0)
+
+asyncio.run(app.run_polling())
+scheduler.start()  # Start daily scheduling
