@@ -6,7 +6,7 @@ import logging
 import openai
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Update, Bot, InlineQueryResultArticle, InputTextMessageContent
-from telegram.ext import Application, CommandHandler, InlineQueryHandler
+from telegram.ext import Application, CommandHandler, InlineQueryHandler, MessageHandler, filters
 
 # Load environment variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -92,14 +92,20 @@ async def inline_query(update, context):
         )
         await update.inline_query.answer([result], cache_time=0)
 
+async def delete_non_fact_messages(update: Update, context):
+    """Delete any message that is NOT '/fact'."""
+    # Delete the message if it's not exactly "/fact"
+    if update.message.text != "/fact":
+        await update.message.delete()
+
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("fact", fact_command))
-# Add InlineQueryHandler to bot
 app.add_handler(InlineQueryHandler(inline_query))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, delete_non_fact_messages))
 
 scheduler = AsyncIOScheduler()
 scheduler.add_job(send_daily_fact, "cron", hour=1, minute=0)
