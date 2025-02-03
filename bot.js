@@ -29,12 +29,47 @@ function saveFact(fact) {
   fs.writeFileSync(FACTS_FILE, JSON.stringify({ facts: data.slice(-200) }, null, 4))
 }
 
+const topics = [
+  'geography',
+  'history',
+  'science',
+  'technology',
+  'mathematics',
+  'language',
+  'art',
+  'music',
+  'sports',
+  'food',
+  'animals',
+  'plants',
+  'space',
+  'literature',
+  'mythology',
+  'religion',
+  'politics',
+  'economics',
+  'psychology',
+  'philosophy',
+  'education',
+  'health',
+  'medicine',
+  'engineering',
+  'architecture',
+  'transportation',
+  'environment',
+  'society',
+  'culture',
+  'games',
+  'fashion',
+]
+
 async function fetchUniqueFact() {
   const previousFacts = getPreviousFacts()
+  const randomTopic = topics[Math.floor(Math.random() * topics.length)]
   const messages = [
     {
       role: 'user',
-      content: `Give me a bite-sized fun and educational fact that is not in the following list:\n${previousFacts.join('\n')}\n\nAdd a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting). Keep the response under 250 characters.`
+      content: `Give me a bite-sized fun and educational fact on ${randomTopic} that is not in the following list:\n${previousFacts.join('\n')}\n\nAdd a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting). Keep the response under 250 characters.`
     }
   ]
 
