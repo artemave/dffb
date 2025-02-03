@@ -99,7 +99,7 @@ bot.launch().then(() => {
   console.error('Error launching bot:', error)
 })
 
-schedule.scheduleJob('0 0 * * *', async () => {
+schedule.scheduleJob('0 0,12 * * *', async () => {
   try {
     await sendDailyFact(bot)
   } catch (error) {
