@@ -1,9 +1,7 @@
-const fs = require('fs')
 const { Telegraf } = require('telegraf')
 const OpenAI = require('openai')
 const schedule = require('node-schedule')
 
-// Load environment variables
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID
@@ -11,23 +9,6 @@ const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY
 })
-
-// Load or create past facts storage
-const FACTS_FILE = 'facts.json'
-if (!fs.existsSync(FACTS_FILE)) {
-  fs.writeFileSync(FACTS_FILE, JSON.stringify({ facts: [] }, null, 4))
-}
-
-function getPreviousFacts() {
-  const data = JSON.parse(fs.readFileSync(FACTS_FILE, 'utf8'))
-  return data.facts
-}
-
-function saveFact(fact) {
-  let data = getPreviousFacts()
-  data.push(fact)
-  fs.writeFileSync(FACTS_FILE, JSON.stringify({ facts: data.slice(-200) }, null, 4))
-}
 
 const topics = [
   'geography',
@@ -61,15 +42,61 @@ const topics = [
   'culture',
   'games',
   'fashion',
+  'film',
+  'television',
+  'internet',
+  'oceans',
+  'boats',
+  'planes',
+  'antiquity',
+  'middle ages',
+  'renaissance',
+  'industrial revolution',
+  'modern era',
+  'future',
+  'ancient civilizations',
+  'world wars',
+  'wars',
+  'revolutions',
+  'inventions',
+  'discoveries',
+  'theories',
+  'experiments',
+]
+
+const styles = [
+  'fun',
+  'interesting',
+  'educational',
+  'entertaining',
+  'fascinating',
+  'intriguing',
+  'amazing',
+  'cool',
+  'awesome',
+  'mind-blowing',
+  'jaw-dropping',
+  'unbelievable',
+  'remarkable',
+  'astonishing',
+  'surprising',
+  'stunning',
+  'breathtaking',
+  'wonderful',
+  'marvelous',
+  'incredible',
 ]
 
 async function fetchUniqueFact() {
-  const previousFacts = getPreviousFacts()
   const randomTopic = topics[Math.floor(Math.random() * topics.length)]
+  const randomStyle1 = styles[Math.floor(Math.random() * styles.length)]
+  const randomStyle2 = styles[Math.floor(Math.random() * styles.length)]
+  const randomStyle = [...new Set([randomStyle1, randomStyle2])].join(' and ')
+
   const messages = [
     {
       role: 'user',
-      content: `Give me a bite-sized fun and educational fact on ${randomTopic} that is not in the following list:\n${previousFacts.join('\n')}\n\nAdd a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting). Keep the response under 250 characters.`
+      content: `Out of ten bite-sized ${randomStyle} facts on ${randomTopic} you would give me, give me number ${Math.ceil(Math.random() * 10)}, but just the fact - no numbering or introductions.\nAdd a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting). Keep the response under 250 characters.`
     }
   ]
 
@@ -81,12 +108,7 @@ async function fetchUniqueFact() {
 
     const fact = response.choices[0].message.content
 
-    if (!previousFacts.includes(fact)) {
-      saveFact(fact)
-      return fact
-    } else {
-      return fetchUniqueFact()
-    }
+    return fact
   } catch (error) {
     console.error(`OpenAI API error: ${error}`)
   }
@@ -106,6 +128,11 @@ bot.use(async (ctx, next) => {
   console.time(`Processing update ${ctx.update.update_id}`)
   await next() // runs next middleware
   console.timeEnd(`Processing update ${ctx.update.update_id}`)
+})
+
+bot.command('start', async (ctx) => {
+  const welcomeMessage = 'Welcome to Fun Fact Bot! Use the /fact command to get a fun and educational fact.'
+  ctx.reply(welcomeMessage)
 })
 
 bot.command('fact', async (ctx) => {
