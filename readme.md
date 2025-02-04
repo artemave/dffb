@@ -1,6 +1,6 @@
 # daily fun fact bot
 
-A Telegram bot that periodically posts fun and educational facts to a channel/group. It can also be quizzed directly via `/fact` command or "inline query".
+A Telegram bot that periodically posts fun and educational facts to a channel/group. It can also be quizzed directly via `/fact` command.
 
 ## Setup
 

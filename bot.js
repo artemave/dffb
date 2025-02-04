@@ -142,21 +142,6 @@ bot.command('fact', async (ctx) => {
   ctx.reply(fact);
 })
 
-bot.on('inline_query', async (ctx) => {
-  const fact = await fetchUniqueFact()
-  const results = [
-    {
-      type: 'article',
-      id: String(Math.random()), // Unique identifier for this result
-      title: 'Fun Fact',
-      input_message_content: {
-        message_text: fact
-      }
-    }
-  ]
-  await ctx.answerInlineQuery(results, { cache_time: 0 })
-})
-
 bot.launch().then(() => {
   console.log('Bot is running')
 }).catch((error) => {
