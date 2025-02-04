@@ -87,7 +87,7 @@ const styles = [
   'incredible',
 ]
 
-async function fetchUniqueFact() {
+async function fetchUniqueFact(topic) {
   const randomTopic = topics[Math.floor(Math.random() * topics.length)]
   const randomStyle1 = styles[Math.floor(Math.random() * styles.length)]
   const randomStyle2 = styles[Math.floor(Math.random() * styles.length)]
@@ -96,7 +96,7 @@ async function fetchUniqueFact() {
   const messages = [
     {
       role: 'user',
-      content: `Out of ten bite-sized ${randomStyle} facts on ${randomTopic} you would give me, give me number ${Math.ceil(Math.random() * 10)}, but just the fact - no numbering or introductions.\nAdd a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting). Keep the response under 250 characters.`
+      content: `Out of ten bite-sized ${randomStyle} facts on ${topic || randomTopic} you would give me, give me number ${Math.ceil(Math.random() * 10)}, but just the fact - no numbering or introductions.\nAdd a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting). Keep the response under 250 characters.`
     }
   ]
 
@@ -131,13 +131,15 @@ bot.use(async (ctx, next) => {
 })
 
 bot.command('start', async (ctx) => {
-  const welcomeMessage = 'Welcome to Fun Fact Bot! Use the /fact command to get a fun and educational fact.'
+  const welcomeMessage = 'Welcome to Fun Fact Bot! Use the `/fact` command to get a fun and educational fact. You can optionally specify a topic after /fact. E.g., `/fact space`'
   ctx.reply(welcomeMessage)
 })
 
 bot.command('fact', async (ctx) => {
-  const fact = await fetchUniqueFact()
-  ctx.reply(fact)
+  const input = ctx.message.text.split(' ');
+  const topic = input.length > 1 ? input.slice(1).join(' ') : null;
+  const fact = await fetchUniqueFact(topic);
+  ctx.reply(fact);
 })
 
 bot.on('inline_query', async (ctx) => {
