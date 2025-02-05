@@ -87,7 +87,27 @@ const styles = [
   'incredible',
 ]
 
-async function fetchUniqueFact(topic) {
+async function fetchFact({ topic }) {
+  return queryLlm(({ randomTopic, randomStyle }) => `
+      Out of five bite-sized ${randomStyle} facts on ${topic || randomTopic} you would give me,
+      give me number ${Math.ceil(Math.random() * 5)}, but just the fact - no numbering or introductions.
+      Add a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting).
+      Make sure the link exists. Keep the response under 250 characters.
+    `)
+}
+
+async function fetchFiction({ author, topic }) {
+  return queryLlm(({ randomTopic, randomStyle }) => {
+    const maybeWrittenBy = author ? ` written by ${author}` : ''
+    return `
+      Out of five bite-sized imaginary ${randomStyle} facts on ${topic || randomTopic} ${maybeWrittenBy} you would give me,
+      give me number ${Math.ceil(Math.random() * 5)},
+      but just the fact - no numbering or introductionsKeep the response under 250 characters.
+    `
+  })
+}
+
+async function queryLlm(promptCb) {
   const randomTopic = topics[Math.floor(Math.random() * topics.length)]
   const randomStyle1 = styles[Math.floor(Math.random() * styles.length)]
   const randomStyle2 = styles[Math.floor(Math.random() * styles.length)]
@@ -96,7 +116,7 @@ async function fetchUniqueFact(topic) {
   const messages = [
     {
       role: 'user',
-      content: `Out of ten bite-sized ${randomStyle} facts on ${topic || randomTopic} you would give me, give me number ${Math.ceil(Math.random() * 10)}, but just the fact - no numbering or introductions.\nAdd a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting). Keep the response under 250 characters.`
+      content: promptCb({ randomStyle, randomTopic })
     }
   ]
 
@@ -115,7 +135,7 @@ async function fetchUniqueFact(topic) {
 }
 
 async function sendDailyFact(bot) {
-  const fact = await fetchUniqueFact()
+  const fact = await fetchFact()
   const channelIds = TELEGRAM_CHANNEL_ID.split(',')
   for (const channelId of channelIds) {
     await bot.telegram.sendMessage(channelId, fact)
@@ -131,14 +151,28 @@ bot.use(async (ctx, next) => {
 })
 
 bot.command('start', async (ctx) => {
-  const welcomeMessage = 'Welcome to Fun Fact Bot! Use the `/fact` command to get a fun and educational fact. You can optionally specify a topic after /fact. E.g., `/fact space`'
+  const welcomeMessage = "Welcome to Fun Fact Bot!\n\nCommands:\n- `/fact`: get a fun and educational fact. You can optionally specify a topic after /fact. E.g., `/fact space`\n- `/fiction`: get a fun fictional 'fact'. Optionally arguments are `topic:xyz` and `author:xyz` (comma separated if both specified)."
   ctx.reply(welcomeMessage)
 })
 
 bot.command('fact', async (ctx) => {
   const input = ctx.message.text.split(' ');
   const topic = input.length > 1 ? input.slice(1).join(' ') : null;
-  const fact = await fetchUniqueFact(topic);
+  const fact = await fetchFact({ topic });
+  ctx.reply(fact);
+})
+
+bot.command('fiction', async (ctx) => {
+  const input = ctx.message.text.split(' ')
+  const args = input.length > 1 ? input.slice(1).join(' ') : ''
+
+  const { topic, author } = args.split(',').reduce((acc, arg) => {
+    const [key, value] = arg.trim().split(':')
+    acc[key] = value
+    return acc
+  }, {})
+
+  const fact = await fetchFiction({ topic, author });
   ctx.reply(fact);
 })
 
