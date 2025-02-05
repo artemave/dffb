@@ -22,4 +22,8 @@ To obtain `TELEGRAM_CHANNEL_ID` (or multiple, comma separated channel/group ids)
 
 Now you can run it:
 
-`node bot.js`
+`npm start`
+
+Run tests:
+
+`npm test`

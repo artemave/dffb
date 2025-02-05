@@ -1,6 +1,7 @@
-const { Telegraf } = require('telegraf')
-const OpenAI = require('openai')
-const schedule = require('node-schedule')
+import { Telegraf } from 'telegraf'
+import OpenAI from 'openai'
+import schedule from 'node-schedule'
+import parseFictionArgs from './parseFictionArgs.js'
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
@@ -151,29 +152,21 @@ bot.use(async (ctx, next) => {
 })
 
 bot.command('start', async (ctx) => {
-  const welcomeMessage = "Welcome to Fun Fact Bot!\n\nCommands:\n- `/fact`: get a fun and educational fact. You can optionally specify a topic after /fact. E.g., `/fact space`\n- `/fiction`: get a fun fictional 'fact'. Optionally arguments are `topic:xyz` and `author:xyz` (comma separated if both specified)."
+  const welcomeMessage = "Welcome to Fun Fact Bot!\n\nCommands:\n- `/fact`: get a fun and educational fact. You can optionally specify a topic after /fact. E.g., `/fact space`\n- `/fiction`: get a fun fictional 'fact'. Optionally arguments are `topic:xyz` and `author:xyz`."
   ctx.reply(welcomeMessage)
 })
 
 bot.command('fact', async (ctx) => {
-  const input = ctx.message.text.split(' ');
-  const topic = input.length > 1 ? input.slice(1).join(' ') : null;
-  const fact = await fetchFact({ topic });
-  ctx.reply(fact);
+  const input = ctx.message.text.split(' ')
+  const topic = input.length > 1 ? input.slice(1).join(' ') : null
+  const fact = await fetchFact({ topic })
+  ctx.reply(fact)
 })
 
 bot.command('fiction', async (ctx) => {
-  const input = ctx.message.text.split(' ')
-  const args = input.length > 1 ? input.slice(1).join(' ') : ''
-
-  const { topic, author } = args.split(',').reduce((acc, arg) => {
-    const [key, value] = arg.trim().split(':')
-    acc[key] = value
-    return acc
-  }, {})
-
-  const fact = await fetchFiction({ topic, author });
-  ctx.reply(fact);
+  const args = parseFictionArgs(ctx.message.text)
+  const fact = await fetchFiction(args)
+  ctx.reply(fact)
 })
 
 bot.launch().then(() => {
