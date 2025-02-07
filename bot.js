@@ -1,6 +1,6 @@
 import { Telegraf } from 'telegraf'
 import OpenAI from 'openai'
-import schedule from 'node-schedule'
+import { scheduleJob } from 'node-schedule'
 import parseFictionArgs from './parseFictionArgs.js'
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -88,7 +88,7 @@ const styles = [
   'incredible',
 ]
 
-async function fetchFact({ topic }) {
+async function fetchFact({ topic } = {}) {
   return queryLlm(({ randomTopic, randomStyle }) => `
       Out of five bite-sized ${randomStyle} facts on ${topic || randomTopic} you would give me,
       give me number ${Math.ceil(Math.random() * 5)}, but just the fact - no numbering or introductions.
@@ -97,7 +97,7 @@ async function fetchFact({ topic }) {
     `)
 }
 
-async function fetchFiction({ author, topic }) {
+async function fetchFiction({ author, topic } = {}) {
   return queryLlm(({ randomTopic, randomStyle }) => {
     const maybeWrittenBy = author ? ` written by ${author}` : ''
     return `
@@ -175,7 +175,9 @@ bot.launch().then(() => {
   console.error('Error launching bot:', error)
 })
 
-schedule.scheduleJob('0 0,12 * * *', async () => {
+const schedule = process.env.BOT_SCHEDULE || '0 0,12 * * *'
+
+scheduleJob(schedule, async () => {
   try {
     await sendDailyFact(bot)
   } catch (error) {
