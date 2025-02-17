@@ -1,7 +1,10 @@
 import { Telegraf } from 'telegraf'
 import OpenAI from 'openai'
 import { scheduleJob } from 'node-schedule'
+import debug from 'debug'
 import parseFictionArgs from './parseFictionArgs.js'
+
+const log = debug('dffb')
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
@@ -88,13 +91,41 @@ const styles = [
   'incredible',
 ]
 
+async function retryIfBs(queryFn) {
+  let fact
+
+  for (let i = 0; i < 5; i++) {
+    fact = await queryFn()
+    // fact contains a url to Wikipedia: extract it
+    const url = fact.match(/https?:\/\/[^\s]+/)?.[0]
+
+    if (url) {
+      // check if getting url returns 200
+      const response = await fetch(url)
+
+      if (response.ok) {
+        log(`${url} PASS`)
+        return fact
+      } else {
+        log(`${url} FAIL`)
+      }
+    } else {
+      log(`No url found in fact: ${fact}`)
+    }
+  }
+
+  return fact
+}
+
 async function fetchFact({ topic } = {}) {
-  return queryLlm(({ randomTopic, randomStyle }) => `
-      Out of five bite-sized ${randomStyle} facts on ${topic || randomTopic} you would give me,
-      give me number ${Math.ceil(Math.random() * 5)}, but just the fact - no numbering or introductions.
-      Add a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting).
-      Make sure the link exists. Keep the response under 250 characters.
-    `)
+  return retryIfBs(() =>
+    queryLlm(({ randomTopic, randomStyle }) => `
+        Out of five bite-sized ${randomStyle} facts on ${topic || randomTopic} you would give me,
+        give me number ${Math.ceil(Math.random() * 5)}, but just the fact - no numbering or introductions.
+        Add a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting).
+        Make sure the link exists. Keep the response under 250 characters.
+      `)
+  )
 }
 
 async function fetchFiction({ author, topic } = {}) {
