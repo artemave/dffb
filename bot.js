@@ -183,7 +183,7 @@ bot.use(async (ctx, next) => {
 })
 
 bot.command('start', async (ctx) => {
-  const welcomeMessage = "Welcome to Fun Fact Bot!\n\nCommands:\n- `/fact`: get a fun and educational fact. You can optionally specify a topic after /fact. E.g., `/fact space`\n- `/fiction`: get a fun fictional 'fact'. Optionally arguments are `topic:xyz` and `author:xyz`."
+  const welcomeMessage = "This is Fact Bot!\n\nCommands:\n- /fact: get a fun and educational fact. You can optionally specify a topic after /fact. E.g. '/fact space'.\n- /fiction: get a fun fictional 'fact'. Optionally arguments are 'topic:xyz' and 'author:xyz'. E.g. '/fiction author:Douglas Adams topic:Donald Trump'"
   ctx.reply(welcomeMessage)
 })
 
