@@ -157,6 +157,8 @@ async function queryLlm(promptCb) {
   const randomStyle2 = styles[Math.floor(Math.random() * styles.length)]
   const randomStyle = [...new Set([randomStyle1, randomStyle2])].join(' and ')
 
+  log({randomTopic, randomStyle})
+
   const messages = [
     {
       role: 'user',
@@ -171,6 +173,8 @@ async function queryLlm(promptCb) {
     })
 
     const fact = response.choices[0].message.content
+
+    log({fact})
 
     return fact
   } catch (error) {
