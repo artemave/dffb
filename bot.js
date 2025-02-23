@@ -18,6 +18,9 @@ const topics = [
   'ancient civilizations',
   'animals',
   'antiquity',
+  'nervous system',
+  'paradoxes',
+  'limits of the human mind',
   'architecture',
   'art',
   'astronomy',
@@ -33,9 +36,13 @@ const topics = [
   'engineering',
   'environment',
   'evolution',
+  'evolution of the human body',
+  'hunter gatherers',
+  'history of education',
   'experiments',
   'fashion',
-  'film',
+  'cinema',
+  'films',
   'food',
   'future',
   'galaxies',
@@ -44,6 +51,7 @@ const topics = [
   'geology',
   'health',
   'history',
+  'history of science',
   'industrial revolution',
   'internet',
   'inventions',
@@ -53,7 +61,22 @@ const topics = [
   'medicine',
   'microbiology',
   'middle ages',
+  'illusions',
+  'cognitive biases',
+  'mind tricks',
+  'microcosmos',
+  'dinosaurs',
+  'ancient oceans',
+  'ancient continents',
+  'the future of the solar system',
+  'solar system',
+  'the moon',
+  'mars',
+  'venus',
   'modern era',
+  'earth interior',
+  'extreme weather',
+  'black holes',
   'music',
   'mythology',
   'nanotechnology',
@@ -61,9 +84,12 @@ const topics = [
   'paganism',
   'philosophy',
   'physics',
+  'chemistry',
+  'climate history',
   'plants',
   'politics',
   'psychology',
+  'sociology',
   'religion',
   'renaissance',
   'revolutions',
@@ -74,9 +100,12 @@ const topics = [
   'star formation',
   'technology',
   'television',
-  'theories',
   'transportation',
+  'globalisation',
+  'groundbreaking political changes',
+  'groundbreaking political movements',
   'wars',
+  'human migrations',
   'world wars',
 ]
 
@@ -84,80 +113,77 @@ const styles = [
   'fun',
   'interesting',
   'educational',
-  'entertaining',
   'fascinating',
   'intriguing',
-  'amazing',
-  'cool',
-  'awesome',
   'mind-blowing',
-  'jaw-dropping',
   'unbelievable',
   'remarkable',
-  'astonishing',
   'surprising',
-  'stunning',
-  'breathtaking',
-  'wonderful',
-  'marvelous',
-  'incredible',
+  'less known'
 ]
 
-async function retryIfBs(queryFn) {
-  let fact
+async function linkExists(url) {
+  const response = await fetch(url)
 
-  for (let i = 0; i < 5; i++) {
-    fact = await queryFn()
-    // fact contains a url to Wikipedia: extract it
-    const url = fact.match(/https?:\/\/[^\s]+/)?.[0]
+  if (response.ok) {
+    log(`${url} PASS`)
 
-    if (url) {
-      // check if getting url returns 200
-      const response = await fetch(url)
+    return true
+  } else {
+    log(`${url} FAIL`)
 
-      if (response.ok) {
-        log(`${url} PASS`)
-        return fact
-      } else {
-        log(`${url} FAIL`)
-      }
-    } else {
-      log(`No url found in fact: ${fact}`)
-    }
+    return false
   }
-
-  return fact
 }
 
 async function fetchFact({ topic } = {}) {
-  return retryIfBs(() =>
-    queryLlm(({ randomTopic, randomStyle }) => `
-        Out of five bite-sized ${randomStyle} facts on ${topic || randomTopic} you would give me,
-        give me number ${Math.ceil(Math.random() * 5)}, but just the fact - no numbering or introductions.
-        Add a relevant Wikipedia link if you can find one (a bare link, no markdown or other formatting).
-        Make sure the link exists. Keep the response under 250 characters.
-      `)
-  )
+  const { facts } = await queryLlm(({ randomTopic, randomStyle }) => {
+    const chosenTopic = topic || randomTopic
+
+    log({chosenTopic, randomStyle})
+
+    return `
+      Give me twenty different bite-sized ${randomStyle} facts on ${chosenTopic}.
+      Return json that looks like this: {"facts": [{ "fact": "text...", "url": "https://en.wikipedia.org/xyz" }, ...]} where fact.url is a link to the relevant Wikipedia article.
+      Make sure the link exists. Keep the response under 250 characters.
+    `
+  })
+
+  const randomlySortedFacts = facts.sort(() => Math.random() - 0.5)
+  let fact
+
+  for (const item of randomlySortedFacts) {
+    if (await linkExists(item.url)) {
+      fact = item
+      break
+    }
+  }
+
+  return `${fact.fact}\n\n${fact.url}`
 }
 
 async function fetchFiction({ author, topic } = {}) {
-  return queryLlm(({ randomTopic, randomStyle }) => {
+  return queryLlm(({ randomTopic }) => {
     const maybeWrittenBy = author ? ` written by ${author}` : ''
+    const chosenTopic = topic || randomTopic
+
+    log({chosenTopic, author})
+
     return `
-      Out of five bite-sized imaginary ${randomStyle} facts on ${topic || randomTopic} ${maybeWrittenBy} you would give me,
+      Out of five bite-sized imaginary fictional facts on ${chosenTopic} ${maybeWrittenBy} you would give me,
       give me number ${Math.ceil(Math.random() * 5)},
-      but just the fact - no numbering or introductionsKeep the response under 250 characters.
+      but just the "fact" - no numbering or introductions. The response should not highlight the fictional nature of the "fact", it should look sufficiently plausable.
+      Bonuse points for being creative, smart and funny.
+      Keep the response under 250 characters.
     `
-  })
+  }, { json: false })
 }
 
-async function queryLlm(promptCb) {
+async function queryLlm(promptCb, { json = true } = {}) {
   const randomTopic = topics[Math.floor(Math.random() * topics.length)]
   const randomStyle1 = styles[Math.floor(Math.random() * styles.length)]
   const randomStyle2 = styles[Math.floor(Math.random() * styles.length)]
   const randomStyle = [...new Set([randomStyle1, randomStyle2])].join(' and ')
-
-  log({randomTopic, randomStyle})
 
   const messages = [
     {
@@ -167,16 +193,25 @@ async function queryLlm(promptCb) {
   ]
 
   try {
-    const response = await openai.chat.completions.create({
+    const payload = {
       model: "gpt-4o-mini",
       messages
-    })
+    }
 
-    const fact = response.choices[0].message.content
+    if (json) {
+      payload.response_format = {
+        type: 'json_object'
+      }
+    }
 
-    log({fact})
+    log(payload)
 
-    return fact
+    const response = await openai.chat.completions.create(payload)
+    const reply = json ? JSON.parse(response.choices[0].message.content) : response.choices[0].message.content
+
+    log(reply)
+
+    return reply
   } catch (error) {
     console.error(`OpenAI API error: ${error}`)
   }
