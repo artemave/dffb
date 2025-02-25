@@ -15,19 +15,24 @@ const openai = new OpenAI({
 })
 
 const topics = [
+  'ISS',
+  'africa',
   'agricultural revolution',
   'agriculture',
   'ancient civilizations',
   'ancient continents',
   'ancient oceans',
   'animals',
+  'antarctica',
   'antiquity',
   'ants',
   'archaeology',
   'architecture',
   'art',
+  'asia',
   'asteroids',
   'astronomy',
+  'australia',
   'aviation',
   'bacteria',
   'big bang',
@@ -35,6 +40,7 @@ const topics = [
   'black holes',
   'boats',
   'chemistry',
+  'china',
   'cinema',
   'climate history',
   'cognitive biases',
@@ -42,6 +48,7 @@ const topics = [
   'cosmology',
   'culture',
   'currencies',
+  'deep see creatures',
   'dinosaurs',
   'discoveries',
   'earth interior',
@@ -80,16 +87,20 @@ const topics = [
   'industrial revolution',
   'internet',
   'inventions',
+  'japan',
   'language',
   'limits of the human mind',
   'literature',
+  'marine life',
   'mars',
   'mathematics',
   'medicine',
+  'meteors',
   'microbiology',
   'microcosmos',
   'middle ages',
   'mind tricks',
+  'minerals',
   'modern era',
   'music',
   'mythology',
@@ -107,12 +118,15 @@ const topics = [
   'religion',
   'renaissance',
   'revolutions',
+  'sailing',
   'science',
   'society',
   'sociology',
   'solar system',
+  'south america',
+  'space travel',
   'space',
-  'sports',
+  'sport',
   'star formation',
   'stone age',
   'technology',
@@ -124,6 +138,7 @@ const topics = [
   'viruses',
   'volcanoes',
   'wars',
+  'wind',
   'wonders of the human mind',
   'world wars',
 ]
@@ -252,8 +267,12 @@ bot.use(async (ctx, next) => {
   console.timeEnd(`Processing update ${ctx.update.update_id}`)
 })
 
+const welcomeMessage = "This is Fact Bot!\n\nCommands:\n- /fact: get a fun and educational fact. You can optionally specify a topic after /fact. E.g. '/fact space'.\n- /fiction: get a fun fictional 'fact'. Optionally arguments are 'topic:xyz' and 'author:xyz'. E.g. '/fiction author:Douglas Adams topic:Donald Trump'"
 bot.command('start', async (ctx) => {
-  const welcomeMessage = "This is Fact Bot!\n\nCommands:\n- /fact: get a fun and educational fact. You can optionally specify a topic after /fact. E.g. '/fact space'.\n- /fiction: get a fun fictional 'fact'. Optionally arguments are 'topic:xyz' and 'author:xyz'. E.g. '/fiction author:Douglas Adams topic:Donald Trump'"
+  ctx.reply(welcomeMessage)
+})
+
+bot.command('help', async (ctx) => {
   ctx.reply(welcomeMessage)
 })
 
