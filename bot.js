@@ -118,6 +118,7 @@ const topics = [
   'religion',
   'renaissance',
   'revolutions',
+  'rocks',
   'sailing',
   'science',
   'society',
@@ -130,6 +131,7 @@ const topics = [
   'star formation',
   'stone age',
   'technology',
+  'tectonics',
   'television',
   'the future of the solar system',
   'the moon',
@@ -279,12 +281,14 @@ bot.command('help', async (ctx) => {
 bot.command('fact', async (ctx) => {
   const input = ctx.message.text.split(' ')
   const topic = input.length > 1 ? input.slice(1).join(' ') : null
+  await ctx.sendChatAction('typing')
   const fact = await fetchFact({ topic })
   ctx.reply(fact)
 })
 
 bot.command('fiction', async (ctx) => {
   const args = parseFictionArgs(ctx.message.text)
+  await ctx.sendChatAction('typing')
   const fact = await fetchFiction(args)
   ctx.reply(fact)
 })
