@@ -179,7 +179,7 @@ async function fetchFact({ topic } = {}) {
     log({chosenTopic, randomStyle})
 
     return `
-      Give me twenty different bite-sized ${randomStyle} facts on ${chosenTopic}.
+      Give me ten different bite-sized ${randomStyle} facts on ${chosenTopic}.
       Return json that looks like this: {"facts": [{ "fact": "text...", "url": "https://en.wikipedia.org/xyz" }, ...]} where fact.url is a link to the relevant Wikipedia article.
       Make sure the link exists. Keep the response under 250 characters.
     `
