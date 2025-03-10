@@ -15,6 +15,7 @@ const openai = new OpenAI({
 })
 
 const topics = [
+  'DIY',
   'ISS',
   'africa',
   'agricultural revolution',
@@ -70,6 +71,7 @@ const topics = [
   'extreme weather',
   'fashion',
   'films',
+  'flowers',
   'food',
   'fungi',
   'future',
@@ -107,6 +109,7 @@ const topics = [
   'mind tricks',
   'minerals',
   'modern era',
+  'mushrooms',
   'music',
   'mythology',
   'nanotechnology',
@@ -145,7 +148,6 @@ const topics = [
   'toys',
   'transportation',
   'trees',
-  'venus',
   'viruses',
   'volcanoes',
   'wars',
